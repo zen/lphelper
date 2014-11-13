@@ -1,0 +1,16 @@
+{
+    "manifest_version": 2,
+
+    "name": "Launchpad Helper",
+    "description": "Useful Launchpad functionality in your browser.",
+    "version": "1.0",
+
+    "permissions": [
+        "https://github.com/zen/lphelper"
+    ],
+    "content_scripts": [ {
+        "js": ["src/contrib/jquery-2.1.1.min.js", "src/contrib/jquery.cluetip.min.js", "src/lphelper.js"],
+        "css": ["src/contrib/jquery.cluetip.css"],
+        "matches": ["https://*/*"]
+    } ]
+}
