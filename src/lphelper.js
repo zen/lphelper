@@ -23,7 +23,6 @@ $(document).ready(function() {
                 href = $el.attr('href'),
                 username = href.replace('https://launchpad.net/~', ''),
                 url = APIUrl + '~' + username + '/super_teams',
-                teams = [],
                 obj = {$dialog: $dialog, pos: {}, size: {}, open: false};
 
             $.ajax({
@@ -32,11 +31,15 @@ $(document).ready(function() {
                 headers: {'Content-Type': 'application/json'}
             })
             .done(function(response) {
-                teams = $.map(response.entries, function(entry) {
-                    return entry.display_name;
+                var teams = [];
+
+                response.entries.sort(function(e1, e2) {
+                    return e1.display_name.localeCompare(e2.name);
                 });
-                $el.attr('title', teams.join('|'));
-                console.log($el.attr('title'));
+                teams = $.map(response.entries, function(entry) {
+                    return '<a href="' + entry.web_link + '">' + entry.display_name + '</a>';
+                });
+                $el.attr('title', teams.join('<br />'));
                 $el.cluetip({
                     splitTitle: '|',
                     showTitle: false,
