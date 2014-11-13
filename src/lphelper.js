@@ -9,8 +9,7 @@
 // @grant       none
 // ==/UserScript==
 
-//var APIDomain = 'api.launchpad.net';
-var APIDomain = 'lphelper.intrepidus.pl';
+var APIDomain = 'api.launchpad.net';
 var APIUrl = 'https://' + APIDomain + '/1.0/';
 
 var dialogs = [];
