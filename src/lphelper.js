@@ -12,11 +12,45 @@
 var APIDomain = 'api.launchpad.net';
 var APIUrl = 'https://' + APIDomain + '/1.0/';
 
+var bugLastUpdatedImportanceClasses = [
+    {olderThan: moment.duration(1, 'month'), importance: 'critical'},
+    {olderThan: moment.duration(2, 'weeks'), importance: 'high'},
+    {olderThan: moment.duration(1, 'week'), importance: 'medium'}
+];
+
+var calculateImportanceFromLastUpdated = function(last_updated) {
+    var now = moment(),
+        diff = now.diff(moment(last_updated)) / 1000;
+
+    for(var i = 0; i < bugLastUpdatedImportanceClasses.length; i++) {
+        var obj = bugLastUpdatedImportanceClasses[i];
+        if (diff >= obj.olderThan.asSeconds()) {
+            return obj.importance;
+        }
+    }
+};
+
 var importanceClass = function(importance) {
-    return 'importance' + importance.toUpperCase();
+    if (importance) {
+        return 'importance' + importance.toUpperCase();
+    }
+
+    return '';
 };
 var importanceSpan = function(contents, importance) {
     return '<span class="' + importanceClass(importance) + '">' + contents + '</span>';
+};
+var clearLastUpdatedSpan = function($el) {
+    $el.find('.js-lphelper-last-updated').remove();
+};
+var lastUpdatedSpan = function(response) {
+    var importance = importanceClass(calculateImportanceFromLastUpdated(response.date_last_updated)),
+        $innerSpan = $('<span class="js-lphelper-inner ' + importance + '">[Last updated: ' + moment(response.date_last_updated).fromNow() + ']</span>'),
+        $el = $('<span class="js-lphelper-last-updated"></span>');
+    $el.append($innerSpan);
+    $el.append('<span>&nbsp;&nbsp;&nbsp;</span>');
+
+    return $el;
 };
 
 var bugNumberFromLink = function(url) {
@@ -101,7 +135,10 @@ var bugCluetip = function() {
 
             $ela.attr('title', title + '|' + description);
             $ela.cluetip(opts);
-            $ela.trigger('showCluetip');
+
+            clearLastUpdatedSpan($ela);
+            var $lastUpdatedSpan = lastUpdatedSpan(response);
+            $ela.prepend($lastUpdatedSpan);
         });
     });
 };
@@ -158,6 +195,6 @@ $(document).ready(function() {
 
 
     // Bug info
-    $(document).find('.buglisting-row .buginfo').one('mouseenter', bugCluetip);
-    $(document).find('a[href*="bugs.launchpad.net"]').one('mouseenter', bugCluetip);
+    $(document).find('.buglisting-row .buginfo').each(bugCluetip);
+    $(document).find('a[href*="bugs.launchpad.net"]').each(bugCluetip);
 });
