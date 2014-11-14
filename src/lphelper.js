@@ -80,10 +80,12 @@ var bugCluetip = function() {
             var assignees = $.map(responseBugTasks.entries, function(entry) {
                 var assignee = usernameFromLink(entry.assignee_link);
                 if (assignee) {
-                    return makeUserLink(assignee) + ' [' + entry.bug_target_name + ']';
+                    assignee = makeUserLink(assignee);
+                } else {
+                    assignee = 'None';
                 }
 
-                return 'None';
+                return assignee + ' [' + entry.bug_target_name + ']';
             });
             var owner = usernameFromLink(response.owner_link);
             var title = 'Bug ' + bugnumber + '<br /> Owner: ' + makeUserLink(owner) + '<br /> Assignees: ' + assignees.join(', ');
