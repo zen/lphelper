@@ -94,6 +94,7 @@ var bugCluetip = function() {
 
             $ela.attr('title', title + '|' + description);
             $ela.cluetip(opts);
+            $ela.trigger('showCluetip');
         });
     });
 };
@@ -120,6 +121,7 @@ var personCluetip = function() {
         });
         $el.attr('title', teams.join('<br />'));
         $el.cluetip(cluetipOptions());
+        $el.trigger('showCluetip');
     }).fail(function(r) {
         console.log('error', r.status, r.statusText);
     });
@@ -129,7 +131,7 @@ $(document).ready(function() {
     var subscribersPollNum = 0;
 
     // Person info
-    $(document).find('a.sprite.person').each(personCluetip);
+    $(document).find('a.sprite.person').one('mouseenter', personCluetip);
 
     // Persons are also fetched later (for example: subscribers on the bug page)
     // So we poll for them a couple of times
@@ -137,7 +139,7 @@ $(document).ready(function() {
         var $elems = $(document).find('a:has(.sprite.person)');
 
         if($elems.length > 0) {
-            $elems.each(personCluetip);
+            $elems.one('mouseenter', personCluetip);
         } else {
             subscribersPollNum++;
             if (subscribersPollNum < 10) {
@@ -149,6 +151,6 @@ $(document).ready(function() {
 
 
     // Bug info
-    $(document).find('.buglisting-row .buginfo').each(bugCluetip);
-    $(document).find('a[href*="bugs.launchpad.net"]').each(bugCluetip);
+    $(document).find('.buglisting-row .buginfo').one('mouseenter', bugCluetip);
+    $(document).find('a[href*="bugs.launchpad.net"]').one('mouseenter', bugCluetip);
 });
