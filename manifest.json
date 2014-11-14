@@ -2,8 +2,13 @@
     "manifest_version": 2,
 
     "name": "Launchpad Helper",
+    "short_name": "lphelper",
     "description": "Useful Launchpad functionality in your browser.",
-    "version": "1.0",
+    "version": "1.0.1",
+
+    "icons": {
+        "128": "logo128.png"
+    },
 
     "permissions": [
         "https://github.com/zen/lphelper"
