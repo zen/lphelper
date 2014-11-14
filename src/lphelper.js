@@ -142,6 +142,7 @@ var bugCluetip = function() {
 
                 $ela.attr('title', title + '|' + description);
                 $ela.cluetip(opts);
+                $ela.trigger('showCluetip');
             });
         });
     });
