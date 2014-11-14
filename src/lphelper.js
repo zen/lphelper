@@ -12,8 +12,20 @@
 var APIDomain = 'api.launchpad.net';
 var APIUrl = 'https://' + APIDomain + '/1.0/';
 
-var urlRe = /(https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*))/g;
+var bugNumberFromLink = function(url) {
+    var match = (url || '').match(/^.*\+bug\/(\d+).*/);
 
+    return match && match[1];
+};
+var makeUserLink = function(username) {
+    return '<a href="http://launchpad.net/~' + username + '">' + username + '</a>';
+};
+var usernameFromLink = function(url) {
+    return (url || '').replace('https://launchpad.net/~', '')
+        .replace('https://api.launchpad.net/1.0/~', '');
+};
+
+var urlRe = /(https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*))/g;
 var urlify = function(str) {
     return str.replace(urlRe, function(s) {
         // Remove endings that usually break urls
@@ -42,40 +54,59 @@ var cluetipOptions = function() {
 var bugCluetip = function() {
     var $el = $(this),
         $ela = $el.attr('href') ? $el : $el.find('a'),
-        match = $ela.attr('href').match(/^.*\+bug\/(\d+).*/),
-        bugnumber = match && match[1],
+        bugnumber = bugNumberFromLink($ela.attr('href')),
         url = APIUrl + 'bugs/' + bugnumber;
 
-    if (match === null) {
+    if (bugnumber === null) {
         return;
     }
 
     $.ajax({
         method: 'GET',
         url: url,
-        headers: {'Content-Type': 'application/json'}
+        headers: {'Content-Type': 'application/json'},
+        cache: true
     }).done(function(response) {
-        var opts = cluetipOptions();
-        opts.width = 600;
+        $.ajax({
+            method: 'GET',
+            url: response.bug_tasks_collection_link,
+            headers: {'Content-Type': 'application/json'},
+            cache: true
+        }).done(function(responseBugTasks) {
+            var opts = cluetipOptions();
+            opts.width = 600;
+            opts.showTitle = true;
 
-        var description = response.description.replace(/\n/g, '<br />');
-        description = urlify(description);
+            var assignees = $.map(responseBugTasks.entries, function(entry) {
+                var assignee = usernameFromLink(entry.assignee_link);
+                if (assignee) {
+                    return makeUserLink(assignee) + ' [' + entry.bug_target_name + ']';
+                }
 
-        $ela.attr('title', description);
-        $ela.cluetip(opts);
+                return 'None';
+            });
+            var owner = usernameFromLink(response.owner_link);
+            var title = 'Bug ' + bugnumber + '<br /> Owner: ' + makeUserLink(owner) + '<br /> Assignees: ' + assignees.join(', ');
+            var description = response.description.replace(/\n/g, '<br />');
+            description = urlify(description);
+
+            $ela.attr('title', title + '|' + description);
+            $ela.cluetip(opts);
+        });
     });
 };
 
 var personCluetip = function() {
     var $el = $(this),
         href = $el.attr('href'),
-        username = href.replace('https://launchpad.net/~', ''),
+        username = usernameFromLink(href),
         url = APIUrl + '~' + username + '/super_teams';
 
     $.ajax({
         method: "GET",
         url: url,
-        headers: {'Content-Type': 'application/json'}
+        headers: {'Content-Type': 'application/json'},
+        cache: true
     }).done(function(response) {
         var teams = [];
 
