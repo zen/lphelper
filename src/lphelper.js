@@ -86,7 +86,7 @@ var urlify = function(str) {
 var cluetipOptions = function() {
     return {
         splitTitle: '|',
-        showTitle: false,
+        showTitle: true,
         sticky: true,
         hoverIntent: false,
         mouseOutClose: true
@@ -123,7 +123,6 @@ var bugCluetip = function() {
             }).done(function(responseBugTasks) {
                 var opts = cluetipOptions();
                 opts.width = 600;
-                opts.showTitle = true;
 
                 var assignees = $.map(responseBugTasks.entries, function(entry) {
                     var assignee = usernameFromLink(entry.assignee_link);
@@ -168,7 +167,7 @@ var personCluetip = function() {
         teams = $.map(response.entries, function(entry) {
             return '<a href="' + entry.web_link + '">' + entry.display_name + '</a>';
         });
-        $el.attr('title', teams.join('<br />'));
+        $el.attr('title', username + '|' + teams.join('<br />'));
         $el.cluetip(cluetipOptions());
         $el.trigger('showCluetip');
     }).fail(function(r) {
