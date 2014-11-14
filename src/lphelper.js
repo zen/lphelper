@@ -12,24 +12,19 @@
 var APIDomain = 'api.launchpad.net';
 var APIUrl = 'https://' + APIDomain + '/1.0/';
 
-var dialogs = [];
-
 $(document).ready(function() {
     $(document).find('a.sprite.person')
         .each(function(idx) {
             var $el = $(this),
-                $dialog = $('<span></span>'),
                 href = $el.attr('href'),
                 username = href.replace('https://launchpad.net/~', ''),
-                url = APIUrl + '~' + username + '/super_teams',
-                obj = {$dialog: $dialog, pos: {}, size: {}, open: false};
+                url = APIUrl + '~' + username + '/super_teams';
 
             $.ajax({
                 method: "GET",
                 url: url,
                 headers: {'Content-Type': 'application/json'}
-            })
-            .done(function(response) {
+            }).done(function(response) {
                 var teams = [];
 
                 response.entries.sort(function(e1, e2) {
@@ -46,8 +41,7 @@ $(document).ready(function() {
                     hoverIntent: false,
                     mouseOutClose: true
                 });
-            })
-            .fail(function(r) {
+            }).fail(function(r) {
                 console.log('error', r.status, r.statusText);
             });
         });
