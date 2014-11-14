@@ -39,34 +39,54 @@ var cluetipOptions = function() {
     };
 };
 
-$(document).ready(function() {
-    // Person info
-    $(document).find('a.sprite.person')
-        .each(function() {
-            var $el = $(this),
-                href = $el.attr('href'),
-                username = href.replace('https://launchpad.net/~', ''),
-                url = APIUrl + '~' + username + '/super_teams';
+var personCluetip = function() {
+    var $el = $(this),
+        href = $el.attr('href'),
+        username = href.replace('https://launchpad.net/~', ''),
+        url = APIUrl + '~' + username + '/super_teams';
 
-            $.ajax({
-                method: "GET",
-                url: url,
-                headers: {'Content-Type': 'application/json'}
-            }).done(function(response) {
-                var teams = [];
+    $.ajax({
+        method: "GET",
+        url: url,
+        headers: {'Content-Type': 'application/json'}
+    }).done(function(response) {
+        var teams = [];
 
-                response.entries.sort(function(e1, e2) {
-                    return e1.display_name.localeCompare(e2.name);
-                });
-                teams = $.map(response.entries, function(entry) {
-                    return '<a href="' + entry.web_link + '">' + entry.display_name + '</a>';
-                });
-                $el.attr('title', teams.join('<br />'));
-                $el.cluetip(cluetipOptions());
-            }).fail(function(r) {
-                console.log('error', r.status, r.statusText);
-            });
+        response.entries.sort(function(e1, e2) {
+            return e1.display_name.localeCompare(e2.name);
         });
+        teams = $.map(response.entries, function(entry) {
+            return '<a href="' + entry.web_link + '">' + entry.display_name + '</a>';
+        });
+        $el.attr('title', teams.join('<br />'));
+        $el.cluetip(cluetipOptions());
+    }).fail(function(r) {
+        console.log('error', r.status, r.statusText);
+    });
+};
+
+$(document).ready(function() {
+    var subscribersPollNum = 0;
+
+    // Person info
+    $(document).find('a.sprite.person').each(personCluetip);
+
+    // Persons are also fetched later (for example: subscribers on the bug page)
+    // So we poll for them a couple of times
+    var findSubscribers = function() {
+        var $elems = $(document).find('a:has(.sprite.person)');
+
+        if($elems.length > 0) {
+            $elems.each(personCluetip);
+        } else {
+            subscribersPollNum++;
+            if (subscribersPollNum < 10) {
+                setTimeout(findSubscribers, 1000);
+            }
+        }
+    };
+    findSubscribers();
+
 
     // Bug info
     $(document).find('.buglisting-row .buginfo')
