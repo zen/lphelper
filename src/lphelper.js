@@ -109,37 +109,40 @@ var bugCluetip = function() {
         headers: {'Content-Type': 'application/json'},
         cache: true
     }).done(function(response) {
-        $.ajax({
-            method: 'GET',
-            url: response.bug_tasks_collection_link,
-            headers: {'Content-Type': 'application/json'},
-            cache: true
-        }).done(function(responseBugTasks) {
-            var opts = cluetipOptions();
-            opts.width = 600;
-            opts.showTitle = true;
+        clearLastUpdatedSpan($ela);
+        var $lastUpdatedSpan = lastUpdatedSpan(response);
+        $ela.prepend($lastUpdatedSpan);
 
-            var assignees = $.map(responseBugTasks.entries, function(entry) {
-                var assignee = usernameFromLink(entry.assignee_link);
-                if (assignee) {
-                    assignee = makeUserLink(assignee);
-                } else {
-                    assignee = 'None';
-                }
+        // Save on requests, fetch tasks lazily
+        $ela.one('mouseenter', function() {
+            $.ajax({
+                method: 'GET',
+                url: response.bug_tasks_collection_link,
+                headers: {'Content-Type': 'application/json'},
+                cache: true
+            }).done(function(responseBugTasks) {
+                var opts = cluetipOptions();
+                opts.width = 600;
+                opts.showTitle = true;
 
-                return assignee + ' ' + importanceSpan('[' + entry.bug_target_name + ']', entry.importance);
+                var assignees = $.map(responseBugTasks.entries, function(entry) {
+                    var assignee = usernameFromLink(entry.assignee_link);
+                    if (assignee) {
+                        assignee = makeUserLink(assignee);
+                    } else {
+                        assignee = 'None';
+                    }
+
+                    return assignee + ' ' + importanceSpan('[' + entry.bug_target_name + ']', entry.importance);
+                });
+                var owner = usernameFromLink(response.owner_link);
+                var title = 'Bug ' + bugnumber + '<br /> Owner: ' + makeUserLink(owner) + '<br /> Assignees: ' + assignees.join(', ');
+                var description = response.description.replace(/\n/g, '<br />');
+                description = urlify(description);
+
+                $ela.attr('title', title + '|' + description);
+                $ela.cluetip(opts);
             });
-            var owner = usernameFromLink(response.owner_link);
-            var title = 'Bug ' + bugnumber + '<br /> Owner: ' + makeUserLink(owner) + '<br /> Assignees: ' + assignees.join(', ');
-            var description = response.description.replace(/\n/g, '<br />');
-            description = urlify(description);
-
-            $ela.attr('title', title + '|' + description);
-            $ela.cluetip(opts);
-
-            clearLastUpdatedSpan($ela);
-            var $lastUpdatedSpan = lastUpdatedSpan(response);
-            $ela.prepend($lastUpdatedSpan);
         });
     });
 };
