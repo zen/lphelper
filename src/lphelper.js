@@ -31,56 +31,60 @@ var calculateImportanceFromLastUpdated = function(last_updated) {
     }
 };
 
-var importanceClass = function(importance) {
-    if (importance) {
-        return 'importance' + importance.toUpperCase();
-    }
-
-    return '';
-};
-var importanceSpan = function(contents, importance) {
-    return '<span class="' + importanceClass(importance) + '">' + contents + '</span>';
-};
-var clearLastUpdatedSpan = function($el) {
-    $el.find('.js-lphelper-last-updated').remove();
-};
-var lastUpdatedSpan = function(response) {
-    var importance = importanceClass(calculateImportanceFromLastUpdated(response.date_last_updated)),
-        $innerSpan = $('<span class="js-lphelper-inner ' + importance + '">[Last updated: ' + moment(response.date_last_updated).fromNow() + ']</span>'),
-        $el = $('<span class="js-lphelper-last-updated"></span>');
-    $el.append($innerSpan);
-    $el.append('<span>&nbsp;&nbsp;&nbsp;</span>');
-
-    return $el;
-};
-
-var bugNumberFromLink = function(url) {
-    var match = (url || '').match(/^.*\+bug\/(\d+).*/);
-
-    return match && match[1];
-};
-var makeUserLink = function(username) {
-    return '<a href="http://launchpad.net/~' + username + '">' + username + '</a>';
-};
-var usernameFromLink = function(url) {
-    return (url || '').replace('https://launchpad.net/~', '')
-        .replace('https://api.launchpad.net/1.0/~', '');
-};
-
-var urlRe = /(https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*))/g;
-var urlify = function(str) {
-    return str.replace(urlRe, function(s) {
-        // Remove endings that usually break urls
-        var badEndings = ['.', ',', ';'],
-            ending = '';
-
-        if (badEndings.indexOf(s.slice(-1)) > -1) {
-            ending = s.slice(-1);
-            s = s.slice(0, -1);
+var HTMLHelpers = {
+    importanceClass: function(importance) {
+        if (importance) {
+            return 'importance' + importance.toUpperCase();
         }
 
-        return '<a href="' + s + '">' + s + '</a>' + ending;
-    });
+        return '';
+    },
+    importanceSpan: function(contents, importance) {
+        return '<span class="' + HTMLHelpers.importanceClass(importance) + '">' + contents + '</span>';
+    },
+    clearLastUpdatedSpan: function($el) {
+        $el.find('.js-lphelper-last-updated').remove();
+    },
+    lastUpdatedSpan: function(response) {
+        var importance = HTMLHelpers.importanceClass(calculateImportanceFromLastUpdated(response.date_last_updated)),
+            $innerSpan = $('<span class="js-lphelper-inner ' + importance + '">[Last updated: ' + moment(response.date_last_updated).fromNow() + ']</span>'),
+            $el = $('<span class="js-lphelper-last-updated"></span>');
+        $el.append($innerSpan);
+        $el.append('<span>&nbsp;&nbsp;&nbsp;</span>');
+
+        return $el;
+    },
+
+    urlRe: /(https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*))/g,
+    urlify: function(str) {
+        return str.replace(HTMLHelpers.urlRe, function(s) {
+            // Remove endings that usually break urls
+            var badEndings = ['.', ',', ';'],
+                ending = '';
+
+            if (badEndings.indexOf(s.slice(-1)) > -1) {
+                ending = s.slice(-1);
+                s = s.slice(0, -1);
+            }
+
+            return '<a href="' + s + '">' + s + '</a>' + ending;
+        });
+    }
+};
+
+var URLHelpers = {
+    bugNumberFromURL: function(url) {
+        var match = (url || '').match(/^.*\+bug\/(\d+).*/);
+
+        return match && match[1];
+    },
+    makeUserURL: function(username) {
+        return '<a href="http://launchpad.net/~' + username + '">' + username + '</a>';
+    },
+    usernameFromURL: function(url) {
+        return (url || '').replace('https://launchpad.net/~', '')
+            .replace('https://api.launchpad.net/1.0/~', '');
+    }
 };
 
 var cluetipOptions = function() {
@@ -93,97 +97,100 @@ var cluetipOptions = function() {
     };
 };
 
-var bugCluetip = function() {
-    var $el = $(this),
-        $ela = $el.attr('href') ? $el : $el.find('a'),
-        bugnumber = bugNumberFromLink($ela.attr('href')),
-        url = APIUrl + 'bugs/' + bugnumber;
+var CluetipFunctions = {
+    bug: function() {
+        var $el = $(this),
+            $ela = $el.attr('href') ? $el : $el.find('a'),
+            bugnumber = URLHelpers.bugNumberFromURL($ela.attr('href')),
+            url = APIUrl + 'bugs/' + bugnumber;
 
-    if ((bugnumber === null) || (bugnumber == currentBugNumber)) {
-        return;
-    }
+        if ((bugnumber === null) || (bugnumber == currentBugNumber)) {
+            return;
+        }
 
-    $.ajax({
-        method: 'GET',
-        url: url,
-        headers: {'Content-Type': 'application/json'},
-        cache: true
-    }).done(function(response) {
-        clearLastUpdatedSpan($ela);
-        var $lastUpdatedSpan = lastUpdatedSpan(response);
-        $ela.prepend($lastUpdatedSpan);
+        $.ajax({
+            method: 'GET',
+            url: url,
+            headers: {'Content-Type': 'application/json'},
+            cache: true
+        }).done(function(response) {
+            HTMLHelpers.clearLastUpdatedSpan($ela);
+            var $lastUpdatedSpan = HTMLHelpers.lastUpdatedSpan(response);
+            $ela.prepend($lastUpdatedSpan);
 
-        // Save on requests, fetch tasks lazily
-        $ela.one('mouseenter', function() {
-            $.ajax({
-                method: 'GET',
-                url: response.bug_tasks_collection_link,
-                headers: {'Content-Type': 'application/json'},
-                cache: true
-            }).done(function(responseBugTasks) {
-                var opts = cluetipOptions();
-                opts.width = 600;
+            // Save on requests, fetch tasks lazily
+            $ela.one('mouseenter', function() {
+                $.ajax({
+                    method: 'GET',
+                    url: response.bug_tasks_collection_link,
+                    headers: {'Content-Type': 'application/json'},
+                    cache: true
+                }).done(function(responseBugTasks) {
+                    var opts = cluetipOptions();
+                    opts.width = 600;
 
-                var assignees = $.map(responseBugTasks.entries, function(entry) {
-                    var assignee = usernameFromLink(entry.assignee_link);
-                    if (assignee) {
-                        assignee = makeUserLink(assignee);
-                    } else {
-                        assignee = 'None';
-                    }
+                    var assignees = $.map(responseBugTasks.entries, function(entry) {
+                        var assignee = URLHelpers.usernameFromURL(entry.assignee_link);
+                        if (assignee) {
+                            assignee = URLHelpers.makeUserURL(assignee);
+                        } else {
+                            assignee = 'None';
+                        }
 
-                    return assignee + ' ' + importanceSpan('[' + entry.bug_target_name + ']', entry.importance);
+                        return assignee + ' ' + HTMLHelpers.importanceSpan('[' + entry.bug_target_name + ']', entry.importance);
+                    });
+                    var owner = URLHelpers.usernameFromURL(response.owner_link);
+                    var title = 'Bug ' + bugnumber + '<br /> Owner: ' + URLHelpers.makeUserURL(owner) + '<br /> Assignees: ' + assignees.join(', ');
+                    var description = response.description.replace(/\n/g, '<br />');
+                    description = HTMLHelpers.urlify(description);
+
+                    $ela.attr('title', title + '|' + description);
+                    $ela.cluetip(opts);
+                    $ela.trigger('showCluetip');
                 });
-                var owner = usernameFromLink(response.owner_link);
-                var title = 'Bug ' + bugnumber + '<br /> Owner: ' + makeUserLink(owner) + '<br /> Assignees: ' + assignees.join(', ');
-                var description = response.description.replace(/\n/g, '<br />');
-                description = urlify(description);
-
-                $ela.attr('title', title + '|' + description);
-                $ela.cluetip(opts);
-                $ela.trigger('showCluetip');
             });
         });
-    });
+    },
+
+    person: function() {
+        var $el = $(this),
+            href = $el.attr('href'),
+            username = URLHelpers.usernameFromURL(href),
+            url = APIUrl + '~' + username + '/super_teams';
+
+        $.ajax({
+            method: "GET",
+            url: url,
+            headers: {'Content-Type': 'application/json'},
+            cache: true
+        }).done(function(response) {
+            var teams = [];
+
+            response.entries.sort(function(e1, e2) {
+                return e1.display_name.localeCompare(e2.name);
+            });
+            teams = $.map(response.entries, function(entry) {
+                return '<a href="' + entry.web_link + '">' + entry.display_name + '</a>';
+            });
+            $el.attr('title', username + '|' + teams.join('<br />'));
+            $el.cluetip(cluetipOptions());
+            $el.trigger('showCluetip');
+        }).fail(function(r) {
+            console.log('error', r.status, r.statusText);
+        });
+    }
 };
 
-var personCluetip = function() {
-    var $el = $(this),
-        href = $el.attr('href'),
-        username = usernameFromLink(href),
-        url = APIUrl + '~' + username + '/super_teams';
-
-    $.ajax({
-        method: "GET",
-        url: url,
-        headers: {'Content-Type': 'application/json'},
-        cache: true
-    }).done(function(response) {
-        var teams = [];
-
-        response.entries.sort(function(e1, e2) {
-            return e1.display_name.localeCompare(e2.name);
-        });
-        teams = $.map(response.entries, function(entry) {
-            return '<a href="' + entry.web_link + '">' + entry.display_name + '</a>';
-        });
-        $el.attr('title', username + '|' + teams.join('<br />'));
-        $el.cluetip(cluetipOptions());
-        $el.trigger('showCluetip');
-    }).fail(function(r) {
-        console.log('error', r.status, r.statusText);
-    });
-};
 
 
-currentBugNumber = bugNumberFromLink(window.location.href);
+currentBugNumber = URLHelpers.bugNumberFromURL(window.location.href);
 
 
 $(document).ready(function() {
     var subscribersPollNum = 0;
 
     // Person info
-    $(document).find('a.sprite.person').one('mouseenter', personCluetip);
+    $(document).find('a.sprite.person').one('mouseenter', CluetipFunctions.person);
 
     // Persons are also fetched later (for example: subscribers on the bug page)
     // So we poll for them a couple of times
@@ -191,7 +198,7 @@ $(document).ready(function() {
         var $elems = $(document).find('a:has(.sprite.person)');
 
         if($elems.length > 0) {
-            $elems.one('mouseenter', personCluetip);
+            $elems.one('mouseenter', CluetipFunctions.person);
         } else {
             subscribersPollNum++;
             if (subscribersPollNum < 10) {
@@ -203,6 +210,6 @@ $(document).ready(function() {
 
 
     // Bug info
-    $(document).find('.buglisting-row .buginfo').each(bugCluetip);
-    $(document).find('a[href*="bugs.launchpad.net"]').each(bugCluetip);
+    $(document).find('.buglisting-row .buginfo').each(CluetipFunctions.bug);
+    $(document).find('a[href*="bugs.launchpad.net"]').each(CluetipFunctions.bug);
 });
