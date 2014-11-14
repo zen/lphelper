@@ -11,6 +11,7 @@
 
 var APIDomain = 'api.launchpad.net';
 var APIUrl = 'https://' + APIDomain + '/1.0/';
+var currentBugNumber;
 
 var bugLastUpdatedImportanceClasses = [
     {olderThan: moment.duration(1, 'month'), importance: 'critical'},
@@ -98,7 +99,7 @@ var bugCluetip = function() {
         bugnumber = bugNumberFromLink($ela.attr('href')),
         url = APIUrl + 'bugs/' + bugnumber;
 
-    if (bugnumber === null) {
+    if ((bugnumber === null) || (bugnumber == currentBugNumber)) {
         return;
     }
 
@@ -170,6 +171,10 @@ var personCluetip = function() {
         console.log('error', r.status, r.statusText);
     });
 };
+
+
+currentBugNumber = bugNumberFromLink(window.location.href);
+
 
 $(document).ready(function() {
     var subscribersPollNum = 0;
