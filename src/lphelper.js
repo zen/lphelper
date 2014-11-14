@@ -12,6 +12,13 @@
 var APIDomain = 'api.launchpad.net';
 var APIUrl = 'https://' + APIDomain + '/1.0/';
 
+var importanceClass = function(importance) {
+    return 'importance' + importance.toUpperCase();
+};
+var importanceSpan = function(contents, importance) {
+    return '<span class="' + importanceClass(importance) + '">' + contents + '</span>';
+};
+
 var bugNumberFromLink = function(url) {
     var match = (url || '').match(/^.*\+bug\/(\d+).*/);
 
@@ -85,7 +92,7 @@ var bugCluetip = function() {
                     assignee = 'None';
                 }
 
-                return assignee + ' [' + entry.bug_target_name + ']';
+                return assignee + ' ' + importanceSpan('[' + entry.bug_target_name + ']', entry.importance);
             });
             var owner = usernameFromLink(response.owner_link);
             var title = 'Bug ' + bugnumber + '<br /> Owner: ' + makeUserLink(owner) + '<br /> Assignees: ' + assignees.join(', ');
