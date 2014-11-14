@@ -1,3 +1,9 @@
-.cluetip-close {
+.cluetip .cluetip-inner {
+    max-height: 400px;
+    overflow-y: auto;
+    word-wrap: break-word;
+}
+
+.cluetip .cluetip-inner .cluetip-close {
     display: none;
 }
