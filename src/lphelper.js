@@ -39,6 +39,33 @@ var cluetipOptions = function() {
     };
 };
 
+var bugCluetip = function() {
+    var $el = $(this),
+        $ela = $el.attr('href') ? $el : $el.find('a'),
+        match = $ela.attr('href').match(/^.*\+bug\/(\d+).*/),
+        bugnumber = match && match[1],
+        url = APIUrl + 'bugs/' + bugnumber;
+
+    if (match === null) {
+        return;
+    }
+
+    $.ajax({
+        method: 'GET',
+        url: url,
+        headers: {'Content-Type': 'application/json'}
+    }).done(function(response) {
+        var opts = cluetipOptions();
+        opts.width = 600;
+
+        var description = response.description.replace(/\n/g, '<br />');
+        description = urlify(description);
+
+        $ela.attr('title', description);
+        $ela.cluetip(opts);
+    });
+};
+
 var personCluetip = function() {
     var $el = $(this),
         href = $el.attr('href'),
@@ -89,26 +116,6 @@ $(document).ready(function() {
 
 
     // Bug info
-    $(document).find('.buglisting-row .buginfo')
-        .each(function() {
-            var $el = $(this),
-                $ela = $el.find('a'),
-                bugnumber = $el.find('.bugnumber').text().replace('#', ''),
-                url = APIUrl + 'bugs/' + bugnumber;
-
-            $.ajax({
-                method: 'GET',
-                url: url,
-                headers: {'Content-Type': 'application/json'}
-            }).done(function(response) {
-                var opts = cluetipOptions();
-                opts.width = 600;
-
-                var description = response.description.replace(/\n/g, '<br />');
-                description = urlify(description);
-
-                $ela.attr('title', description);
-                $ela.cluetip(opts);
-            });
-        });
+    $(document).find('.buglisting-row .buginfo').each(bugCluetip);
+    $(document).find('a[href*="bugs.launchpad.net"]').each(bugCluetip);
 });
