@@ -1,3 +1,5 @@
 - Private bugs fetching (needs research -- access to Cookie?)
 - Firefox & Chrome seem to display tool tip on hover -- is there any
   way to disable it?
+- Display 'Last updated' info only for bugs that are open (i.e. haven't
+  'Fix commited' or 'Fix relesed' status)
