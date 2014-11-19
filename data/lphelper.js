@@ -19,11 +19,11 @@ var bugLastUpdatedImportanceClasses = [
     {olderThan: moment.duration(1, 'week'), importance: 'medium'}
 ];
 
-var calculateImportanceFromLastUpdated = function(last_updated) {
+var calculateImportanceFromLastUpdated = function (last_updated) {
     var now = moment(),
         diff = now.diff(moment(last_updated)) / 1000;
 
-    for(var i = 0; i < bugLastUpdatedImportanceClasses.length; i++) {
+    for (var i = 0; i < bugLastUpdatedImportanceClasses.length; i++) {
         var obj = bugLastUpdatedImportanceClasses[i];
         if (diff >= obj.olderThan.asSeconds()) {
             return obj.importance;
@@ -32,20 +32,20 @@ var calculateImportanceFromLastUpdated = function(last_updated) {
 };
 
 var HTMLHelpers = {
-    importanceClass: function(importance) {
+    importanceClass: function (importance) {
         if (importance) {
             return 'importance' + importance.toUpperCase();
         }
 
         return '';
     },
-    importanceSpan: function(contents, importance) {
+    importanceSpan: function (contents, importance) {
         return '<span class="' + HTMLHelpers.importanceClass(importance) + '">' + contents + '</span>';
     },
-    clearLastUpdatedSpan: function($el) {
+    clearLastUpdatedSpan: function ($el) {
         $el.find('.js-lphelper-last-updated').remove();
     },
-    lastUpdatedSpan: function(response) {
+    lastUpdatedSpan: function (response) {
         var importance = HTMLHelpers.importanceClass(calculateImportanceFromLastUpdated(response.date_last_updated)),
             $innerSpan = $('<span class="js-lphelper-inner ' + importance + '">[Last updated: ' + moment(response.date_last_updated).fromNow() + ']</span>'),
             $el = $('<span class="js-lphelper-last-updated"></span>');
@@ -56,8 +56,8 @@ var HTMLHelpers = {
     },
 
     urlRe: /(https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*))/g,
-    urlify: function(str) {
-        return str.replace(HTMLHelpers.urlRe, function(s) {
+    urlify: function (str) {
+        return str.replace(HTMLHelpers.urlRe, function (s) {
             // Remove endings that usually break urls
             var badEndings = ['.', ',', ';'],
                 ending = '';
@@ -73,21 +73,21 @@ var HTMLHelpers = {
 };
 
 var URLHelpers = {
-    bugNumberFromURL: function(url) {
+    bugNumberFromURL: function (url) {
         var match = (url || '').match(/^.*\+bug\/(\d+).*/);
 
         return match && match[1];
     },
-    makeUserURL: function(username) {
+    makeUserURL: function (username) {
         return '<a href="http://launchpad.net/~' + username + '">' + username + '</a>';
     },
-    usernameFromURL: function(url) {
+    usernameFromURL: function (url) {
         return (url || '').replace('https://launchpad.net/~', '')
             .replace('https://api.launchpad.net/1.0/~', '');
     }
 };
 
-var cluetipOptions = function() {
+var cluetipOptions = function () {
     return {
         splitTitle: '|',
         showTitle: true,
@@ -98,7 +98,7 @@ var cluetipOptions = function() {
 };
 
 var CluetipFunctions = {
-    bug: function() {
+    bug: function () {
         var $el = $(this),
             $ela = $el.attr('href') ? $el : $el.find('a'),
             bugnumber = URLHelpers.bugNumberFromURL($ela.attr('href')),
@@ -113,23 +113,23 @@ var CluetipFunctions = {
             url: url,
             headers: {'Content-Type': 'application/json'},
             cache: true
-        }).done(function(response) {
+        }).done(function (response) {
             HTMLHelpers.clearLastUpdatedSpan($ela);
             var $lastUpdatedSpan = HTMLHelpers.lastUpdatedSpan(response);
             $ela.prepend($lastUpdatedSpan);
 
             // Save on requests, fetch tasks lazily
-            $ela.one('mouseenter', function() {
+            $ela.one('mouseenter', function () {
                 $.ajax({
                     method: 'GET',
                     url: response.bug_tasks_collection_link,
                     headers: {'Content-Type': 'application/json'},
                     cache: true
-                }).done(function(responseBugTasks) {
+                }).done(function (responseBugTasks) {
                     var opts = cluetipOptions();
                     opts.width = 600;
 
-                    var assignees = $.map(responseBugTasks.entries, function(entry) {
+                    var assignees = $.map(responseBugTasks.entries, function (entry) {
                         var assignee = URLHelpers.usernameFromURL(entry.assignee_link);
                         if (assignee) {
                             assignee = URLHelpers.makeUserURL(assignee);
@@ -152,7 +152,7 @@ var CluetipFunctions = {
         });
     },
 
-    person: function() {
+    person: function () {
         var $el = $(this),
             href = $el.attr('href'),
             username = URLHelpers.usernameFromURL(href),
@@ -163,30 +163,29 @@ var CluetipFunctions = {
             url: url,
             headers: {'Content-Type': 'application/json'},
             cache: true
-        }).done(function(response) {
+        }).done(function (response) {
             var teams = [];
 
-            response.entries.sort(function(e1, e2) {
+            response.entries.sort(function (e1, e2) {
                 return e1.display_name.localeCompare(e2.name);
             });
-            teams = $.map(response.entries, function(entry) {
+            teams = $.map(response.entries, function (entry) {
                 return '<a href="' + entry.web_link + '">' + entry.display_name + '</a>';
             });
             $el.attr('title', username + '|' + teams.join('<br />'));
             $el.cluetip(cluetipOptions());
             $el.trigger('showCluetip');
-        }).fail(function(r) {
+        }).fail(function (r) {
             console.log('error', r.status, r.statusText);
         });
     }
 };
 
 
-
 currentBugNumber = URLHelpers.bugNumberFromURL(window.location.href);
 
 
-$(document).ready(function() {
+$(document).ready(function () {
     var subscribersPollNum = 0;
 
     // Person info
@@ -194,10 +193,10 @@ $(document).ready(function() {
 
     // Persons are also fetched later (for example: subscribers on the bug page)
     // So we poll for them a couple of times
-    var findSubscribers = function() {
+    var findSubscribers = function () {
         var $elems = $(document).find('a:has(.sprite.person)');
 
-        if($elems.length > 0) {
+        if ($elems.length > 0) {
             $elems.one('mouseenter', CluetipFunctions.person);
         } else {
             subscribersPollNum++;

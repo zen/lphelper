@@ -7,18 +7,18 @@
     "version": "1.0.2",
 
     "icons": {
-        "128": "logo128.png"
+        "128": "data/logo128.png"
     },
 
     "permissions": [
         "https://github.com/zen/lphelper"
     ],
     "content_scripts": [ {
-        "js": ["src/contrib/jquery-2.1.1.min.js", "src/contrib/jquery.cluetip.min.js", "src/contrib/moment.js", "src/lphelper.js"],
-        "css": ["src/contrib/jquery.cluetip.css", "src/style.css"],
+        "js": ["data/contrib/jquery-2.1.1.min.js", "data/contrib/jquery.cluetip.min.js", "data/contrib/moment.js", "data/lphelper.js"],
+        "css": ["data/contrib/jquery.cluetip.css", "data/style.css"],
         "matches": ["*://*.launchpad.net/*"]
     } ],
     "web_accessible_resources": [
-        "images/*.gif"
+        "data/*.gif"
     ]
 }

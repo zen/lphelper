@@ -1,0 +1,12 @@
+{
+  "name": "lphelper",
+  "title": "Launchpad Helper",
+  "id": "jid1-YoyQoShG5oHwvg",
+  "description": "Useful Launchpad functionality in your browser.",
+  "author": "",
+  "license": "MPL 2.0",
+  "version": "0.1",
+  "permissions": {
+    "cross-domain-content": ["https://api.launchpad.net/"]
+  }
+}
