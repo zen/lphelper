@@ -110,6 +110,16 @@ var TooltipFunctions = {
             '<br /><b>Owner</b>: ' + URLHelpers.makeUserURL(owner) +
             '<br /><b>Assignees</b>: ' + assignees.join(', ');
     },
+    formatAssignee: function(entry) {
+        var assignee = URLHelpers.usernameFromURL(entry.assignee_link);
+        if (assignee) {
+            assignee = URLHelpers.makeUserURL(assignee);
+        } else {
+            assignee = 'None';
+        }
+
+        return assignee + ' ' + HTMLHelpers.importanceSpan('[' + entry.bug_target_name + ']', entry.importance);
+    },
     bug: function () {
         var $el = $(this),
             $ela = $el.attr('href') ? $el : $el.find('a'),
@@ -142,16 +152,7 @@ var TooltipFunctions = {
                 }).done(function (responseBugTasks) {
                     var opts = tooltipsterOptions();
 
-                    var assignees = $.map(responseBugTasks.entries, function (entry) {
-                        var assignee = URLHelpers.usernameFromURL(entry.assignee_link);
-                        if (assignee) {
-                            assignee = URLHelpers.makeUserURL(assignee);
-                        } else {
-                            assignee = 'None';
-                        }
-
-                        return assignee + ' ' + HTMLHelpers.importanceSpan('[' + entry.bug_target_name + ']', entry.importance);
-                    });
+                    var assignees = $.map(responseBugTasks.entries, TooltipFunctions.formatAssignee);
                     var owner = URLHelpers.usernameFromURL(response.owner_link);
                     var title = TooltipFunctions.bugTitle(bugnumber, owner, assignees);
                     var description = response.description.replace(/\n/g, '<br />');
