@@ -12,6 +12,7 @@
 var APIDomain = 'api.launchpad.net';
 var APIUrl = 'https://' + APIDomain + '/1.0/';
 var currentBugNumber;
+var markerClass = 'lphelper-marked';
 
 var bugLastUpdatedImportanceClasses = [
     {olderThan: moment.duration(1, 'month'), importance: 'critical'},
@@ -115,9 +116,11 @@ var TooltipFunctions = {
             bugnumber = URLHelpers.bugNumberFromURL($ela.attr('href')),
             url = APIUrl + 'bugs/' + bugnumber;
 
-        if ((bugnumber === null) || (bugnumber == currentBugNumber)) {
+        if ((bugnumber === null) || (bugnumber == currentBugNumber) || ($el.hasClass(markerClass))) {
             return;
         }
+
+        $el.addClass(markerClass);
 
         $.ajax({
             method: 'GET',
@@ -168,6 +171,12 @@ var TooltipFunctions = {
             username = URLHelpers.usernameFromURL(href),
             url = APIUrl + '~' + username + '/super_teams';
 
+        if($el.hasClass(markerClass)) {
+            return;
+        }
+
+        $el.addClass(markerClass);
+
         $.ajax({
             method: "GET",
             url: url,
@@ -194,31 +203,23 @@ var TooltipFunctions = {
 
 currentBugNumber = URLHelpers.bugNumberFromURL(window.location.href);
 
+var noMarkerClassSelector = function() {
+    return ':not(.' + markerClass + ')';
+};
 
-$(document).ready(function () {
-    var subscribersPollNum = 0;
 
+var generateTooltips = function() {
     // Person info
-    $(document).find('a.sprite.person').one('mouseenter', TooltipFunctions.person);
-
-    // Persons are also fetched later (for example: subscribers on the bug page)
-    // So we poll for them a couple of times
-    var findSubscribers = function () {
-        var $elems = $(document).find('a:has(.sprite.person)');
-
-        if ($elems.length > 0) {
-            $elems.one('mouseenter', TooltipFunctions.person);
-        } else {
-            subscribersPollNum++;
-            if (subscribersPollNum < 10) {
-                setTimeout(findSubscribers, 1000);
-            }
-        }
-    };
-    findSubscribers();
-
+    $(document).find('a.sprite.person').filter(noMarkerClassSelector()).one('mouseenter', TooltipFunctions.person);
+    $(document).find('a:has(.sprite.person)').filter(noMarkerClassSelector()).one('mouseenter', TooltipFunctions.person);
 
     // Bug info
-    $(document).find('.buglisting-row .buginfo').each(TooltipFunctions.bug);
-    $(document).find('a[href*="bugs.launchpad.net"]').each(TooltipFunctions.bug);
+    $('#bugs-table-listing').find('.buglisting-row .buginfo').filter(noMarkerClassSelector()).each(TooltipFunctions.bug);
+    $(document).find('a[href*="bugs.launchpad.net"]').filter(noMarkerClassSelector()).each(TooltipFunctions.bug);
+
+    setTimeout(generateTooltips, 1000);
+};
+
+$(document).ready(function() {
+    generateTooltips();
 });
