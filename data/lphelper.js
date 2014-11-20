@@ -98,11 +98,17 @@ var tooltipsterOptions = function() {
         maxWidth: 600,
         onlyOne: true,
         positionTracker: true,
-        theme: 'tooltipster-light'
+        theme: 'tooltipster-light',
+        updateAnimation: false
     }
 };
 
 var TooltipFunctions = {
+    bugTitle: function(bugnumber, owner, assignees) {
+        return '<b>Bug:</b> ' + bugnumber +
+            '<br /><b>Owner</b>: ' + URLHelpers.makeUserURL(owner) +
+            '<br /><b>Assignees</b>: ' + assignees.join(', ');
+    },
     bug: function () {
         var $el = $(this),
             $ela = $el.attr('href') ? $el : $el.find('a'),
@@ -145,12 +151,12 @@ var TooltipFunctions = {
                         return assignee + ' ' + HTMLHelpers.importanceSpan('[' + entry.bug_target_name + ']', entry.importance);
                     });
                     var owner = URLHelpers.usernameFromURL(response.owner_link);
-                    var title = 'Bug ' + bugnumber + '<br /> Owner: ' + URLHelpers.makeUserURL(owner) + '<br /> Assignees: ' + assignees.join(', ');
+                    var title = TooltipFunctions.bugTitle(bugnumber, owner, assignees);
                     var description = response.description.replace(/\n/g, '<br />');
                     description = HTMLHelpers.urlify(description);
 
-                    $ela.attr('title', HTMLHelpers.formatTooltip(title, description));
                     $ela.tooltipster(opts);
+                    $ela.tooltipster('content', HTMLHelpers.formatTooltip(title, description));
                     $ela.tooltipster('show');
                 });
             });
@@ -177,8 +183,8 @@ var TooltipFunctions = {
             teams = $.map(response.entries, function (entry) {
                 return '<a href="' + entry.web_link + '">' + entry.display_name + '</a>';
             });
-            $el.attr('title', HTMLHelpers.formatTooltip(username, teams.join('<br />')));
             $el.tooltipster(tooltipsterOptions());
+            $el.tooltipster('content', HTMLHelpers.formatTooltip(username, teams.join('<br />')));
             $el.tooltipster('show');
         }).fail(function (r) {
             console.log('error', r.status, r.statusText);
