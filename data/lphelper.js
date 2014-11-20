@@ -69,6 +69,9 @@ var HTMLHelpers = {
 
             return '<a href="' + s + '">' + s + '</a>' + ending;
         });
+    },
+    formatTooltip: function(title, content) {
+        return '<div class="tooltip-title">' + title + '</div>' + '<div class="tooltip-content">' + content + '</div>';
     }
 };
 
@@ -87,17 +90,19 @@ var URLHelpers = {
     }
 };
 
-var cluetipOptions = function () {
+var tooltipsterOptions = function() {
     return {
-        splitTitle: '|',
-        showTitle: true,
-        sticky: true,
-        hoverIntent: false,
-        mouseOutClose: true
-    };
+        contentAsHTML: true,
+        interactive: true,
+        interactiveTolerance: 1000,
+        maxWidth: 600,
+        onlyOne: true,
+        positionTracker: true,
+        theme: 'tooltipster-light'
+    }
 };
 
-var CluetipFunctions = {
+var TooltipFunctions = {
     bug: function () {
         var $el = $(this),
             $ela = $el.attr('href') ? $el : $el.find('a'),
@@ -126,8 +131,8 @@ var CluetipFunctions = {
                     headers: {'Content-Type': 'application/json'},
                     cache: true
                 }).done(function (responseBugTasks) {
-                    var opts = cluetipOptions();
-                    opts.width = 600;
+                    var opts = tooltipsterOptions();
+                    opts.position = 'right';
 
                     var assignees = $.map(responseBugTasks.entries, function (entry) {
                         var assignee = URLHelpers.usernameFromURL(entry.assignee_link);
@@ -144,9 +149,9 @@ var CluetipFunctions = {
                     var description = response.description.replace(/\n/g, '<br />');
                     description = HTMLHelpers.urlify(description);
 
-                    $ela.attr('title', title + '|' + description);
-                    $ela.cluetip(opts);
-                    $ela.trigger('showCluetip');
+                    $ela.attr('title', HTMLHelpers.formatTooltip(title, description));
+                    $ela.tooltipster(opts);
+                    $ela.tooltipster('show');
                 });
             });
         });
@@ -172,9 +177,9 @@ var CluetipFunctions = {
             teams = $.map(response.entries, function (entry) {
                 return '<a href="' + entry.web_link + '">' + entry.display_name + '</a>';
             });
-            $el.attr('title', username + '|' + teams.join('<br />'));
-            $el.cluetip(cluetipOptions());
-            $el.trigger('showCluetip');
+            $el.attr('title', HTMLHelpers.formatTooltip(username, teams.join('<br />')));
+            $el.tooltipster(tooltipsterOptions());
+            $el.tooltipster('show');
         }).fail(function (r) {
             console.log('error', r.status, r.statusText);
         });
@@ -189,7 +194,7 @@ $(document).ready(function () {
     var subscribersPollNum = 0;
 
     // Person info
-    $(document).find('a.sprite.person').one('mouseenter', CluetipFunctions.person);
+    $(document).find('a.sprite.person').one('mouseenter', TooltipFunctions.person);
 
     // Persons are also fetched later (for example: subscribers on the bug page)
     // So we poll for them a couple of times
@@ -197,7 +202,7 @@ $(document).ready(function () {
         var $elems = $(document).find('a:has(.sprite.person)');
 
         if ($elems.length > 0) {
-            $elems.one('mouseenter', CluetipFunctions.person);
+            $elems.one('mouseenter', TooltipFunctions.person);
         } else {
             subscribersPollNum++;
             if (subscribersPollNum < 10) {
@@ -209,6 +214,6 @@ $(document).ready(function () {
 
 
     // Bug info
-    $(document).find('.buglisting-row .buginfo').each(CluetipFunctions.bug);
-    $(document).find('a[href*="bugs.launchpad.net"]').each(CluetipFunctions.bug);
+    $(document).find('.buglisting-row .buginfo').each(TooltipFunctions.bug);
+    $(document).find('a[href*="bugs.launchpad.net"]').each(TooltipFunctions.bug);
 });

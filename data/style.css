@@ -1,13 +1,11 @@
-.cluetip-outer .cluetip-title {
+.tooltip-title {
     background-color: #ff9;
 }
 
-.cluetip-inner {
-    max-height: 400px;
-    overflow-y: auto;
-    word-wrap: break-word;
+.tooltip-content {
+    background-color: #eee;
 }
 
-.cluetip-inner .cluetip-close {
+.tooltipster-arrow {
     display: none;
 }
