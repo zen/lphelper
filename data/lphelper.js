@@ -97,7 +97,7 @@ var tooltipsterOptions = function() {
         interactiveTolerance: 1000,
         maxWidth: 600,
         onlyOne: true,
-        positionTracker: true,
+        position: 'right',
         theme: 'tooltipster-light',
         updateAnimation: false
     }
@@ -138,7 +138,6 @@ var TooltipFunctions = {
                     cache: true
                 }).done(function (responseBugTasks) {
                     var opts = tooltipsterOptions();
-                    opts.position = 'right';
 
                     var assignees = $.map(responseBugTasks.entries, function (entry) {
                         var assignee = URLHelpers.usernameFromURL(entry.assignee_link);
