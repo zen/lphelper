@@ -103,7 +103,9 @@ var URLHelpers = {
         return '<a href="' + URLHelpers.launchpad.user(username) + '">' + username + '</a>';
     },
     usernameFromURL: function (url) {
-        return (url || '').replace(LaunchpadUrl + '~', '')
+        return (url || '').replace(APIUrl + '~', '')
+            .replace(APIUrl + '1.0/~', '')
+            .replace(LaunchpadUrl + '~', '')
             .replace(LaunchpadUrl + '1.0/~', '');
     }
 };
