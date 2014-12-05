@@ -11,7 +11,6 @@
 
 var APIDomain = 'api.launchpad.net';
 var APIUrl = 'https://' + APIDomain + '/1.0/';
-var LaunchpadUrl = 'https://launchpad.net/';
 var currentBugNumber;
 var markerClass = 'lphelper-marked';
 
@@ -30,89 +29,6 @@ var calculateImportanceFromLastUpdated = function (last_updated) {
         if (diff >= obj.olderThan.asSeconds()) {
             return obj.importance;
         }
-    }
-};
-
-var HTMLHelpers = {
-    importanceClass: function (importance) {
-        if (importance) {
-            return 'importance' + importance.toUpperCase();
-        }
-
-        return '';
-    },
-    importanceSpan: function (contents, importance) {
-        return '<span class="' + HTMLHelpers.importanceClass(importance) + '">' + contents + '</span>';
-    },
-    clearLastUpdatedSpan: function ($el) {
-        $el.find('.js-lphelper-last-updated').remove();
-    },
-    lastUpdatedSpan: function (response) {
-        var importance = HTMLHelpers.importanceClass(calculateImportanceFromLastUpdated(response.date_last_updated)),
-            $innerSpan = $('<span class="js-lphelper-inner ' + importance + '">[Last updated: ' + moment(response.date_last_updated).fromNow() + ']</span>'),
-            $el = $('<span class="js-lphelper-last-updated"></span>');
-        $el.append($innerSpan);
-        $el.append('<span>&nbsp;&nbsp;&nbsp;</span>');
-
-        return $el;
-    },
-    statusClass: function(status) {
-        if (status) {
-            return 'status' + status.toUpperCase();
-        }
-    },
-
-    urlRe: /(https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*))/g,
-    urlify: function (str) {
-        return str.replace(HTMLHelpers.urlRe, function (s) {
-            // Remove endings that usually break urls
-            var badEndings = ['.', ',', ';'],
-                ending = '';
-
-            if (badEndings.indexOf(s.slice(-1)) > -1) {
-                ending = s.slice(-1);
-                s = s.slice(0, -1);
-            }
-
-            return '<a href="' + s + '">' + s + '</a>' + ending;
-        });
-    },
-    formatTooltip: function(title, content) {
-        return '<div class="tooltip-title">' + title + '</div>' + '<div class="tooltip-content">' + content + '</div>';
-    }
-};
-
-var URLHelpers = {
-    launchpad: {
-        project: function(name) {
-            return LaunchpadUrl + name;
-        },
-        user: function(username) {
-            return LaunchpadUrl + '~' + username;
-        }
-    },
-    bugNumberFromURL: function (url) {
-        var match = (url || '').match(/^.*\+bug\/(\d+).*/);
-
-        return match && match[1];
-    },
-    isPersonPage: function() {
-        return window.location.href.indexOf(LaunchpadUrl + '~') === 0;
-    },
-    makeUserURL: function (username) {
-        return '<a href="' + URLHelpers.launchpad.user(username) + '">' + username + '</a>';
-    },
-    usernameFromURL: function (url) {
-        return (url || '').replace(APIUrl + '~', '')
-            .replace(APIUrl + '1.0/~', '')
-            .replace(LaunchpadUrl + '~', '')
-            .replace(LaunchpadUrl + '1.0/~', '');
-    }
-};
-
-var LaunchpadHelpers = {
-    formatBugTaskTitle: function(bugTask) {
-         return bugTask.title.replace(/Bug.*?: /, '').replace(/"/g, '');
     }
 };
 
@@ -259,29 +175,15 @@ var PageHelpers = {
             var $clientBugs = $('<div id="client-listing"></div>');
             var $listingClientBugs = $('<div id="client-listing"></div>');
             $.each(personBugTasks.entries, function(idx, bugEntry) {
-                var bugnumber = URLHelpers.bugNumberFromURL(bugEntry.web_link);
-                var $bugRow = $('<div class="buglisting-row"></div>');
-                var $bugCol1 = $('<div class="buglisting-col1"></div>');
-                var $bugCol2 = $('<div class="buglisting-col2"></div>');
-                var $bugInfo = $('<div class="buginfo"></div>');
-                var $bugInfoExtra = $('<div class="buginfo-extra"></div>');
-                $bugCol1.append('<div class="importance ' + HTMLHelpers.importanceClass(bugEntry.importance) + '">' + bugEntry.importance + '</div>');
-                $bugCol1.append('<div class="status ' + HTMLHelpers.statusClass(bugEntry.status) + '">' + bugEntry.status + '</div>');
-                $bugCol1.append('<div class="buginfo-extra></div>');
-
-                $bugInfo.append('<span class="bugnumber">#' + bugnumber + '</span> ');
-                $bugInfo.append('<a href="' + bugEntry.web_link + '">' + LaunchpadHelpers.formatBugTaskTitle(bugEntry) + '</a>');
-                $bugInfoExtra.append('<span class="sprite product field">' + bugEntry.bug_target_display_name + '</span>');
-                $bugInfoExtra.append('<span class="bug-heat-icons"></span>');
-                $bugInfoExtra.append('<span class="bug-related-icons"></span>');
-
-                $bugCol2.append($bugInfo);
-                $bugCol2.append($bugInfoExtra);
-
-                $bugRow.append($bugCol1);
-                $bugRow.append($bugCol2);
-
-                $listingClientBugs.append($bugRow);
+                $listingClientBugs.append(
+                    HTMLHelpers.formatBugRow({
+                        bug_target_display_name: bugEntry.bug_target_display_name,
+                        importance: bugEntry.importance,
+                        link: bugEntry.web_link,
+                        status: bugEntry.status,
+                        title: LaunchpadHelpers.formatBugTaskTitle(bugEntry)
+                    })
+                );
             });
             $clientBugs.append($listingClientBugs);
             $bugsHtml.append($clientBugs);

@@ -14,7 +14,7 @@
         "https://github.com/zen/lphelper"
     ],
     "content_scripts": [ {
-        "js": ["data/contrib/jquery-2.1.1.min.js", "data/contrib/jquery.tooltipster.min.js", "data/contrib/moment.js", "data/lphelper.js"],
+        "js": ["data/contrib/jquery-2.1.1.min.js", "data/contrib/jquery.tooltipster.min.js", "data/contrib/moment.js", "data/helpers.js", "data/lphelper.js"],
         "css": ["data/contrib/tooltipster.css", "data/contrib/tooltipster-light.css", "data/style.css"],
         "matches": ["*://*.launchpad.net/*"]
     } ],
