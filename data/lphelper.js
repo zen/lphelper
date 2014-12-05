@@ -11,6 +11,7 @@
 
 var APIDomain = 'api.launchpad.net';
 var APIUrl = 'https://' + APIDomain + '/1.0/';
+var LaunchpadUrl = 'https://launchpad.net/';
 var currentBugNumber;
 var markerClass = 'lphelper-marked';
 
@@ -55,6 +56,11 @@ var HTMLHelpers = {
 
         return $el;
     },
+    statusClass: function(status) {
+        if (status) {
+            return 'status' + status.toUpperCase();
+        }
+    },
 
     urlRe: /(https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*))/g,
     urlify: function (str) {
@@ -77,17 +83,34 @@ var HTMLHelpers = {
 };
 
 var URLHelpers = {
+    launchpad: {
+        project: function(name) {
+            return LaunchpadUrl + name;
+        },
+        user: function(username) {
+            return LaunchpadUrl + '~' + username;
+        }
+    },
     bugNumberFromURL: function (url) {
         var match = (url || '').match(/^.*\+bug\/(\d+).*/);
 
         return match && match[1];
     },
+    isPersonPage: function() {
+        return window.location.href.indexOf(LaunchpadUrl + '~') === 0;
+    },
     makeUserURL: function (username) {
-        return '<a href="http://launchpad.net/~' + username + '">' + username + '</a>';
+        return '<a href="' + URLHelpers.launchpad.user(username) + '">' + username + '</a>';
     },
     usernameFromURL: function (url) {
-        return (url || '').replace('https://launchpad.net/~', '')
-            .replace('https://api.launchpad.net/1.0/~', '');
+        return (url || '').replace(LaunchpadUrl + '~', '')
+            .replace(LaunchpadUrl + '1.0/~', '');
+    }
+};
+
+var LaunchpadHelpers = {
+    formatBugTaskTitle: function(bugTask) {
+         return bugTask.title.replace(/Bug.*?: /, '').replace(/"/g, '');
     }
 };
 
@@ -184,19 +207,83 @@ var TooltipFunctions = {
             headers: {'Content-Type': 'application/json'},
             cache: true
         }).done(function (response) {
-            var teams = [];
+            var teams, html;
 
             response.entries.sort(function (e1, e2) {
                 return e1.display_name.localeCompare(e2.name);
             });
             teams = $.map(response.entries, function (entry) {
-                return '<a href="' + entry.web_link + '">' + entry.display_name + '</a>';
+                return '<div><a href="' + entry.web_link + '">' + entry.display_name + '</a></div>';
             });
-            $el.tooltipster(tooltipsterOptions());
-            $el.tooltipster('content', HTMLHelpers.formatTooltip(username, teams.join('<br />')));
-            $el.tooltipster('show');
+            html = '<h3>Teams</h3>';
+            html += teams.join('');
+
+            $.ajax({
+                method: "GET",
+                // TODO: urlify the assignee= link
+                url: APIUrl + '~' + username + '?ws.op=searchTasks&assignee=https%3A%2F%2Fapi.launchpad.net%2F1.0%2F%7E' + username,
+                headers: {'Content-Type': 'application/json'},
+                cache: true
+            }).done(function(personBugTasks) {
+                var bugs = $.map(personBugTasks.entries, TooltipFunctions.personBugTask);
+                $el.tooltipster(tooltipsterOptions());
+                html += '<h3>Bugs [' + bugs.length + '] (<a href="' + URLHelpers.launchpad.user(username) + '">More details</a>)</h3>';
+                html += bugs.join('');
+                $el.tooltipster('content', HTMLHelpers.formatTooltip(username, html));
+                $el.tooltipster('show');
+            });
         }).fail(function (r) {
             console.log('error', r.status, r.statusText);
+        });
+    },
+    personBugTask: function(bugTask) {
+        return '<div><a href="' + bugTask.bug_link + '">' + LaunchpadHelpers.formatBugTaskTitle(bugTask) + '</a></div>';
+    }
+};
+
+
+var PageHelpers = {
+    person: function() {
+        var username = URLHelpers.usernameFromURL(window.location.href);
+        var $footer = $('#footer');
+
+        return $.ajax({
+            method: 'GET',
+            url: APIUrl + '~' + username + '?ws.op=searchTasks&assignee=https%3A%2F%2Fapi.launchpad.net%2F1.0%2F%7E' + username,
+            headers: {'Content-Type': 'application/json'},
+            cache: true
+        }).done(function(personBugTasks) {
+            var $bugsHtml = $('<div id="bugs-table-listing"></div>');
+            var $clientBugs = $('<div id="client-listing"></div>');
+            var $listingClientBugs = $('<div id="client-listing"></div>');
+            $.each(personBugTasks.entries, function(idx, bugEntry) {
+                var bugnumber = URLHelpers.bugNumberFromURL(bugEntry.web_link);
+                var $bugRow = $('<div class="buglisting-row"></div>');
+                var $bugCol1 = $('<div class="buglisting-col1"></div>');
+                var $bugCol2 = $('<div class="buglisting-col2"></div>');
+                var $bugInfo = $('<div class="buginfo"></div>');
+                var $bugInfoExtra = $('<div class="buginfo-extra"></div>');
+                $bugCol1.append('<div class="importance ' + HTMLHelpers.importanceClass(bugEntry.importance) + '">' + bugEntry.importance + '</div>');
+                $bugCol1.append('<div class="status ' + HTMLHelpers.statusClass(bugEntry.status) + '">' + bugEntry.status + '</div>');
+                $bugCol1.append('<div class="buginfo-extra></div>');
+
+                $bugInfo.append('<span class="bugnumber">#' + bugnumber + '</span> ');
+                $bugInfo.append('<a href="' + bugEntry.web_link + '">' + LaunchpadHelpers.formatBugTaskTitle(bugEntry) + '</a>');
+                $bugInfoExtra.append('<span class="sprite product field">' + bugEntry.bug_target_display_name + '</span>');
+                $bugInfoExtra.append('<span class="bug-heat-icons"></span>');
+                $bugInfoExtra.append('<span class="bug-related-icons"></span>');
+
+                $bugCol2.append($bugInfo);
+                $bugCol2.append($bugInfoExtra);
+
+                $bugRow.append($bugCol1);
+                $bugRow.append($bugCol2);
+
+                $listingClientBugs.append($bugRow);
+            });
+            $clientBugs.append($listingClientBugs);
+            $bugsHtml.append($clientBugs);
+            $footer.before('<h2>Bugs [' + personBugTasks.entries.length + ']</h2> ' + $bugsHtml.html());
         });
     }
 };
@@ -222,5 +309,9 @@ var generateTooltips = function() {
 };
 
 $(document).ready(function() {
-    generateTooltips();
+    if(URLHelpers.isPersonPage()) {
+        PageHelpers.person().done(generateTooltips);
+    } else {
+        generateTooltips();
+    }
 });
