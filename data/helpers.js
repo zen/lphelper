@@ -1,3 +1,5 @@
+var APIDomain = 'api.launchpad.net';
+var LaunchpadAPIUrl = 'https://' + APIDomain + '/1.0/';
 var LaunchpadUrl = 'https://launchpad.net/';
 
 var HTMLHelpers = {
@@ -86,6 +88,22 @@ var URLHelpers = {
             return LaunchpadUrl + '~' + username;
         }
     },
+    launchpadApi: {
+        bug: function(bugnumber) {
+            return LaunchpadAPIUrl + 'bugs/' + bugnumber;
+        },
+        user: function(username) {
+            return LaunchpadAPIUrl + '~' + username;
+        },
+        userBugTasks: function(username) {
+            var userLink = URLHelpers.launchpadApi.user(username);
+
+            return userLink + '?ws.op=searchTasks&assignee=' + encodeURIComponent(userLink);
+        },
+        userSuperTeams: function(username) {
+            return LaunchpadAPIUrl + '~' + username + '/super_teams';
+        }
+    },
     bugNumberFromURL: function (url) {
         var match = (url || '').match(/^.*\+bug\/(\d+).*/);
 
@@ -98,8 +116,8 @@ var URLHelpers = {
         return '<a href="' + URLHelpers.launchpad.user(username) + '">' + username + '</a>';
     },
     usernameFromURL: function (url) {
-        return (url || '').replace(APIUrl + '~', '')
-            .replace(APIUrl + '1.0/~', '')
+        return (url || '').replace(LaunchpadAPIUrl + '~', '')
+            .replace(LaunchpadAPIUrl + '1.0/~', '')
             .replace(LaunchpadUrl + '~', '')
             .replace(LaunchpadUrl + '1.0/~', '');
     }

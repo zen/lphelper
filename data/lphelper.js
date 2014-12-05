@@ -9,8 +9,6 @@
 // @grant       none
 // ==/UserScript==
 
-var APIDomain = 'api.launchpad.net';
-var APIUrl = 'https://' + APIDomain + '/1.0/';
 var currentBugNumber;
 var markerClass = 'lphelper-marked';
 
@@ -65,7 +63,7 @@ var TooltipFunctions = {
         var $el = $(this),
             $ela = $el.attr('href') ? $el : $el.find('a'),
             bugnumber = URLHelpers.bugNumberFromURL($ela.attr('href')),
-            url = APIUrl + 'bugs/' + bugnumber;
+            url = URLHelpers.launchpadApi.bug(bugnumber);
 
         if ((bugnumber === null) || (bugnumber == currentBugNumber) || ($el.hasClass(markerClass))) {
             return;
@@ -111,7 +109,7 @@ var TooltipFunctions = {
         var $el = $(this),
             href = $el.attr('href'),
             username = URLHelpers.usernameFromURL(href),
-            url = APIUrl + '~' + username + '/super_teams';
+            url = URLHelpers.launchpadApi.userSuperTeams(username);
 
         if($el.hasClass(markerClass)) {
             return;
@@ -138,8 +136,7 @@ var TooltipFunctions = {
 
             $.ajax({
                 method: "GET",
-                // TODO: urlify the assignee= link
-                url: APIUrl + '~' + username + '?ws.op=searchTasks&assignee=https%3A%2F%2Fapi.launchpad.net%2F1.0%2F%7E' + username,
+                url: URLHelpers.launchpadApi.userBugTasks(username),
                 headers: {'Content-Type': 'application/json'},
                 cache: true
             }).done(function(personBugTasks) {
@@ -167,7 +164,7 @@ var PageHelpers = {
 
         return $.ajax({
             method: 'GET',
-            url: APIUrl + '~' + username + '?ws.op=searchTasks&assignee=https%3A%2F%2Fapi.launchpad.net%2F1.0%2F%7E' + username,
+            url: URLHelpers.launchpadApi.userBugTasks(username),
             headers: {'Content-Type': 'application/json'},
             cache: true
         }).done(function(personBugTasks) {
