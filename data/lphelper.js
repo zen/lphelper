@@ -46,13 +46,13 @@ var tooltipsterOptions = function() {
 var TooltipFunctions = {
     bugTitle: function(bugnumber, owner, assignees) {
         return '<b>Bug:</b> ' + bugnumber +
-            '<br /><b>Owner</b>: ' + URLHelpers.makeUserURL(owner) +
+            '<br /><b>Owner</b>: ' + HTMLHelpers.makeUserLink(owner) +
             '<br /><b>Assignees</b>: ' + assignees.join(', ');
     },
     formatAssignee: function(entry) {
         var assignee = URLHelpers.usernameFromURL(entry.assignee_link);
         if (assignee) {
-            assignee = URLHelpers.makeUserURL(assignee);
+            assignee = HTMLHelpers.makeUserLink(assignee);
         } else {
             assignee = 'None';
         }
@@ -129,7 +129,7 @@ var TooltipFunctions = {
                 return e1.display_name.localeCompare(e2.name);
             });
             teams = $.map(response.entries, function (entry) {
-                return '<div><a href="' + entry.web_link + '">' + entry.display_name + '</a></div>';
+                return '<div>' + HTMLHelpers.link(entry.web_link, entry.display_name) + '</div>';
             });
             html = '<h3>Teams</h3>';
             html += teams.join('');
@@ -142,7 +142,7 @@ var TooltipFunctions = {
             }).done(function(personBugTasks) {
                 var bugs = $.map(personBugTasks.entries, TooltipFunctions.personBugTask);
                 $el.tooltipster(tooltipsterOptions());
-                html += '<h3>Bugs [' + bugs.length + '] (<a href="' + URLHelpers.launchpad.user(username) + '">More details</a>)</h3>';
+                html += '<h3>Bugs [' + bugs.length + '] (' + HTMLHelpers.link(URLHelpers.launchpad.user(username), 'More details') + ')</h3>';
                 html += bugs.join('');
                 $el.tooltipster('content', HTMLHelpers.formatTooltip(username, html));
                 $el.tooltipster('show');
@@ -152,7 +152,7 @@ var TooltipFunctions = {
         });
     },
     personBugTask: function(bugTask) {
-        return '<div><a href="' + bugTask.bug_link + '">' + LaunchpadHelpers.formatBugTaskTitle(bugTask) + '</a></div>';
+        return '<div>' + HTMLHelpers.link(bugTask.bug_link, LaunchpadHelpers.formatBugTaskTitle(bugTask)) + '</div>';
     }
 };
 

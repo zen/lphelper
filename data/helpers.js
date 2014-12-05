@@ -49,7 +49,7 @@ var HTMLHelpers = {
                 s = s.slice(0, -1);
             }
 
-            return '<a href="' + s + '">' + s + '</a>' + ending;
+            return HTMLHelpers.link(s, s) + ending;
         });
     },
     formatTooltip: function(title, content) {
@@ -67,7 +67,7 @@ var HTMLHelpers = {
             $('<div class="buglisting-col2"></div>').append(
                 $('<div class="buginfo"></div>').append(
                     '<span class="bugnumber">#' + options.bugnumber + '</span> ',
-                    '<a href="' + options.link + '">' + options.title + '</a>'
+                    HTMLHelpers.link(options.link, options.title)
                 ),
                 $('<div class="buginfo-extra"></div>').append(
                     '<span class="sprite product field">' + options.bug_target_display_name + '</span>',
@@ -76,6 +76,12 @@ var HTMLHelpers = {
                 )
             )
         );
+    },
+    link: function(href, content) {
+        return '<a href="' + href + '">' + content + '</a>';
+    },
+    makeUserLink: function (username) {
+        return HTMLHelpers.link(URLHelpers.launchpad.user(username), username);
     }
 };
 
@@ -111,9 +117,6 @@ var URLHelpers = {
     },
     isPersonPage: function() {
         return window.location.href.indexOf(LaunchpadUrl + '~') === 0;
-    },
-    makeUserURL: function (username) {
-        return '<a href="' + URLHelpers.launchpad.user(username) + '">' + username + '</a>';
     },
     usernameFromURL: function (url) {
         return (url || '').replace(LaunchpadAPIUrl + '~', '')
