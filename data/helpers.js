@@ -66,7 +66,7 @@ var HTMLHelpers = {
             ),
             $('<div class="buglisting-col2"></div>').append(
                 $('<div class="buginfo"></div>').append(
-                    '<span class="bugnumber">#' + options.bugnumber + '</span> ',
+                    '<span class="bugnumber">#' + bugnumber + '</span> ',
                     HTMLHelpers.link(options.link, options.title)
                 ),
                 $('<div class="buginfo-extra"></div>').append(
