@@ -5,7 +5,7 @@
   "description": "Useful Launchpad functionality in your browser.",
   "author": "",
   "license": "MPL 2.0",
-  "version": "0.3",
+  "version": "0.3.1",
   "permissions": {
     "cross-domain-content": ["https://api.launchpad.net/"]
   }
