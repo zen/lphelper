@@ -119,10 +119,12 @@ var URLHelpers = {
         return window.location.href.indexOf(LaunchpadUrl + '~') === 0;
     },
     usernameFromURL: function (url) {
-        return (url || '').replace(LaunchpadAPIUrl + '~', '')
-            .replace(LaunchpadAPIUrl + '1.0/~', '')
-            .replace(LaunchpadUrl + '~', '')
-            .replace(LaunchpadUrl + '1.0/~', '');
+        return (url || '').replace(LaunchpadAPIUrl, '')
+            .replace(LaunchpadAPIUrl + '1.0/', '')
+            .replace(LaunchpadUrl, '')
+            .replace(LaunchpadUrl + '1.0/', '')
+            .replace(/^~/, '')
+            .replace(/^\/~/, '');
     }
 };
 
